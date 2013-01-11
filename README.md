@@ -12,3 +12,8 @@ Where can I find the API specifications?
 
 You can find them in apidocs. They're written manually so that we can keep track easily of changes.
 (And I don't feel like making some sort of automatic documentation tool.)
+
+What if I want to update the API specification?
+===============================================
+
+You **must** update the API documentation **in the same commit** as the one that changes the API. Additionally, there should be test cases provided to justfy such a change.
