@@ -9,7 +9,9 @@ proxying with nginx is supported. We do NOT recommend Apache for an API applicat
 How do I build this damn application?
 =====================================
 You can grab it with:
-	go get -u -x github.com/robxu9/reservoir-api
+
+	go get -u -x github.com/robxu9/reservoir
+	
 Powered by goweb! See `code.google.com/p/goweb`.
 
 Where can I find the API specifications?
@@ -19,4 +21,4 @@ You can find them in apidocs. They're written manually so that we can keep track
 
 What if I want to update the API specification?
 ===============================================
-You **must** update the API documentation **in the same commit** as the one that changes the API. Additionally, there should be test cases provided to justfy such a change.
+You **must** update the API documentation **in the same commit** as the one that changes the API. Additionally, there should be test cases provided to justify such a change.
