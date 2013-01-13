@@ -41,14 +41,55 @@ func (d *Database) Disconnect() {
 	}
 }
 
-func (d *Database) Add(value interface{}) error {
+func (d *Database) Insert(value interface{}) error {
 	if value == nil {
-		return fmt.Errorf("Cannot pass nil value to Add!")
+		return fmt.Errorf("Cannot pass nil value to Insert!")
 	}
 
-	// use reflection to gather values
+	// sending an empty struct is enough for creation
 	reflectedValue := reflect.ValueOf(&value).Elem()
+	typeOf := reflectedValue.Type()
 
+	// database name is represented by struct name
+	tablename := typeOf.Name()
+
+	var buffer bytes.Buffer
+
+	buffer.WriteString("CREATE TABLE IF NOT EXISTS ")
+	buffer.WriteString(tablename)
+	buffer.WriteString(" (")
+
+	for i := 0; i < reflectedValue.NumField(); i++ {
+		field := reflectedValue.Field(i)
+		if typeOf.Field(i).Tag == "db" {
+			colname := typeOf.Field(i).Name()
+			coltype := d.get_mysql_type(field.Type().Kind())
+
+			if coltype == "" {
+				return fmt.Errorf("We can't handle exported field %s.", colname)
+			}
+
+			buffer.WriteString(colname)
+			buffer.WriteString(" ")
+			buffer.WriteString(coltype)
+			if i != reflectedValue.NumField()-1 {
+				buffer.WriteString(", ")
+			}
+		}
+	}
+
+	buffer.WriteString(");")
+
+	query := buffer.String()
+	stmt, err := d.connection.Prepare(query)
+
+	if err != nil {
+		return err
+	}
+
+	_, result, err := stmt.Exec()
+
+	return err
 }
 
 func (d *Database) Register(value interface{}) error {
@@ -69,20 +110,41 @@ func (d *Database) Register(value interface{}) error {
 	buffer.WriteString(tablename)
 	buffer.WriteString(" (")
 
+	hasID := false
+
 	for i := 0; i < reflectedValue.NumField(); i++ {
 		field := reflectedValue.Field(i)
-		field
 		colname := typeOf.Field(i).Name()
-		coltype := d.get_mysql_type(field.Type().Kind())
 
-		if coltype == "" {
-			return fmt.Errorf("We can't handle exported field %s.", colname)
-		}
-		buffer.WriteString(colname)
-		buffer.WriteString(" ")
-		buffer.WriteString(coltype)
-		if i != reflectedValue.NumField() - 1 {
-			buffer.WriteString(", ")
+		if typeOf.Field(i).Tag == "field" {
+			coltype := d.get_mysql_type(field.Type().Kind())
+
+			if coltype == "" {
+				return fmt.Errorf("We can't handle exported field %s.", colname)
+			}
+
+			buffer.WriteString(colname)
+			buffer.WriteString(" ")
+			buffer.WriteString(coltype)
+			if i != reflectedValue.NumField()-1 {
+				buffer.WriteString(", ")
+			}
+		} else if typeOf.Field(i).Tag == "id" {
+			if field.Type().Kind() != reflect.Int64 {
+				return fmt.Errorf("field tagged id must be of int64!")
+			}
+			if hasID {
+				return fmt.Errorf("Can't have two ID fields! Duplicate: %s", colname)
+			}
+			coltype := "BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY"
+
+			buffer.WriteString(colname)
+			buffer.WriteString(" ")
+			buffer.WriteString(coltype)
+			if i != reflectedValue.NumField()-1 {
+				buffer.WriteString(", ")
+			}
+			hasID = true
 		}
 	}
 
@@ -96,7 +158,7 @@ func (d *Database) Register(value interface{}) error {
 	}
 
 	_, result, err := stmt.Exec()
-	
+
 	return err
 }
 
@@ -127,14 +189,13 @@ func (d *Database) get_mysql_type(typeKind reflect.Kind) string {
 		return "BIGINT UNSIGNED"
 	case reflect.Float32:
 	case reflect.Float64:
-		return "DOUBLE" // we do NOT use FLOAT because MySQL does everything with double precision	
+		return "DOUBLE" // we do NOT use FLOAT because MySQL does everything with double precision
 	case reflect.Complex64:
 	case reflect.Complex128:
 		return "BLOB" // oh god why
 	// string types
 	case reflect.String:
 		return "TEXT"
-		case 
 	default: // can't handle Array, Chan, Func, Interface, Map, Ptr, Slice, Struct, UnsafePointer
 		return ""
 	}
