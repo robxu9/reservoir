@@ -1,0 +1,141 @@
+package reservoir
+
+import (
+	"bytes"
+	"fmt"
+	mysql "github.com/ziutek/mymysql/thrsafe"
+	"reflect"
+)
+
+type Database struct {
+	connection *mysql.Conn
+	prefix     string
+	open       bool
+}
+
+func NewDatabase(address string, username string, password string, dbname string, prefix string) (*Database, error) {
+	db := new(Database)
+	db.connection = mysql.New("tcp", "", address, username, password, dbname)
+
+	err := db.connection.Connect()
+	if err != nil {
+		return nil, err
+	}
+
+	db.connection.Register("set names utf8")
+
+	db.open = true
+
+	if prefix == nil {
+		prefix = ""
+	}
+
+	db.prefix = prefix
+
+	return db, nil
+}
+
+func (d *Database) Disconnect() {
+	if db.open {
+		d.connection.Close()
+	}
+}
+
+func (d *Database) Add(value interface{}) error {
+	if value == nil {
+		return fmt.Errorf("Cannot pass nil value to Add!")
+	}
+
+	// use reflection to gather values
+	reflectedValue := reflect.ValueOf(&value).Elem()
+
+}
+
+func (d *Database) Register(value interface{}) error {
+	if value == nil {
+		return fmt.Errorf("Cannot pass nil value to Register!")
+	}
+
+	// sending an empty struct is enough for creation
+	reflectedValue := reflect.ValueOf(&value).Elem()
+	typeOf := reflectedValue.Type()
+
+	// database name is represented by struct name
+	tablename := typeOf.Name()
+
+	var buffer bytes.Buffer
+
+	buffer.WriteString("CREATE TABLE IF NOT EXISTS ")
+	buffer.WriteString(tablename)
+	buffer.WriteString(" (")
+
+	for i := 0; i < reflectedValue.NumField(); i++ {
+		field := reflectedValue.Field(i)
+		field
+		colname := typeOf.Field(i).Name()
+		coltype := d.get_mysql_type(field.Type().Kind())
+
+		if coltype == "" {
+			return fmt.Errorf("We can't handle exported field %s.", colname)
+		}
+		buffer.WriteString(colname)
+		buffer.WriteString(" ")
+		buffer.WriteString(coltype)
+		if i != reflectedValue.NumField() - 1 {
+			buffer.WriteString(", ")
+		}
+	}
+
+	buffer.WriteString(");")
+
+	query := buffer.String()
+	stmt, err := d.connection.Prepare(query)
+
+	if err != nil {
+		return err
+	}
+
+	_, result, err := stmt.Exec()
+	
+	return err
+}
+
+func (d *Database) get_mysql_type(typeKind reflect.Kind) string {
+	switch typeKind {
+	// boolean
+	case reflect.Bool:
+		return "BOOL"
+	// numeric types
+	case reflect.Int8:
+		return "TINYINT"
+	case reflect.Int16:
+		return "SMALLINT"
+	case reflect.Int32:
+		return "INT"
+	case reflect.Int:
+	case reflect.Int64:
+		return "BIGINT"
+	case reflect.Uint8:
+		return "TINYINT UNSIGNED"
+	case reflect.Uint16:
+		return "SMALLINT UNSIGNED"
+	case reflect.Uint32:
+		return "INT UNSIGNED"
+	case reflect.Uint:
+	case reflect.Uint64:
+	case reflect.Uintptr:
+		return "BIGINT UNSIGNED"
+	case reflect.Float32:
+	case reflect.Float64:
+		return "DOUBLE" // we do NOT use FLOAT because MySQL does everything with double precision	
+	case reflect.Complex64:
+	case reflect.Complex128:
+		return "BLOB" // oh god why
+	// string types
+	case reflect.String:
+		return "TEXT"
+		case 
+	default: // can't handle Array, Chan, Func, Interface, Map, Ptr, Slice, Struct, UnsafePointer
+		return ""
+	}
+}
