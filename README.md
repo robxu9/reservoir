@@ -6,6 +6,10 @@ It will contain implementation backing for dependencies, remote workers, and sto
 Preferably, this API is the one to serve all requests incoming. If you wish to use virtual domains,
 proxying with nginx is supported. We do NOT recommend Apache for an API application such as this.
 
+What's needed?
+==============
+See TODO.md.
+
 How do I build this damn application?
 =====================================
 You can grab it with:
@@ -21,4 +25,14 @@ You can find them in apidocs. They're written manually so that we can keep track
 
 What if I want to update the API specification?
 ===============================================
-You **must** update the API documentation **in the same commit** as the one that changes the API. Additionally, there should be test cases provided to justify such a change.
+You **must** update the API documentation **in the same commit** as the one that changes the API.
+Additionally, there should be test cases provided to justify such a change.
+
+Is there a license?
+===================
+Yup. New BSD License. I don't put license headers on my files; but if you wish to use my code,
+please header it likewise:
+
+	Copyright (c) [year retrieved] Robert Xu. Licensed under the terms of the New BSD License.
+
+Really, that's it.

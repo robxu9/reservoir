@@ -1,5 +1,9 @@
 package reservoir
 
+// This was an attempt to build a beans-like serializer,
+// which would use reflection to map out a struct to a field.
+// Sadly, that's not happening right now, so this is old.
+
 import (
 	"bytes"
 	"fmt"
