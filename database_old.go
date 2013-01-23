@@ -9,6 +9,7 @@ import (
 	"fmt"
 	mysql "github.com/ziutek/mymysql/thrsafe"
 	"reflect"
+	"strings"
 )
 
 type Database struct {
@@ -96,9 +97,9 @@ func (d *Database) Insert(value interface{}) error {
 	return err
 }
 
-func (d *Database) Register(value interface{}) error {
+func (d *Database) Register(value interface{}) {
 	if value == nil {
-		return fmt.Errorf("Cannot pass nil value to Register!")
+		panic("Cannot pass nil value to Register!")
 	}
 
 	// sending an empty struct is enough for creation
@@ -124,7 +125,7 @@ func (d *Database) Register(value interface{}) error {
 			coltype := d.get_mysql_type(field.Type().Kind())
 
 			if coltype == "" {
-				return fmt.Errorf("We can't handle exported field %s.", colname)
+				panic(fmt.Sprintf("We can't handle exported field %s.", colname))
 			}
 
 			buffer.WriteString(colname)
@@ -133,12 +134,17 @@ func (d *Database) Register(value interface{}) error {
 			if i != reflectedValue.NumField()-1 {
 				buffer.WriteString(", ")
 			}
-		} else if typeOf.Field(i).Tag == "id" {
+		} else if strings.HasPrefix(typeOf.Field(i).Tag, "id:") {
+			split := strings.Split(typeOf.Field(i).Tag, ":")
+			if len(split) != 2 {
+				panic("field tagged id not formatted properly to indicate table!")
+			}
+			table := strings.TrimSpace(split[1])
 			if field.Type().Kind() != reflect.Int64 {
-				return fmt.Errorf("field tagged id must be of int64!")
+				panic("field tagged id must be of int64!")
 			}
 			if hasID {
-				return fmt.Errorf("Can't have two ID fields! Duplicate: %s", colname)
+				panic(fmt.Sprintf("Can't have two ID fields! Duplicate: %s", colname))
 			}
 			coltype := "BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY"
 
