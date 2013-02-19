@@ -50,3 +50,8 @@ type Message struct {
 	msgtype byte   `json:"type"`
 	message string `json:"message"`
 }
+
+type Dispatchable interface {
+	SendMessage(msg *Message) bool
+	Ping() bool
+}
