@@ -2,7 +2,7 @@ package reservoir
 
 /*
 	Message exists as a way to integrate packets in socket connections.
-	When a socket connection with the worker is established, PINGS will be
+	When a socket connection with the worker is established, PING/PONG will be
 	sent often; and when work needs to be done, the following will happen:
 
 	HANDSHAKE -> worker
@@ -36,6 +36,7 @@ package reservoir
 
 const (
 	MSG_PING = iota
+	MSG_PONG
 	MSG_HANDSHAKE
 	MSG_OK
 	MSG_NO
