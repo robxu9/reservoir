@@ -11,11 +11,7 @@ package reservoir
 	MSG_OK or MSG_NO -> host
 
 	if MSG_OK {
-		MSG_BEGIN -> worker
 		MSG_DATA -> worker
-		MSG_END -> worker
-		MSG_CHECK -> worker
-
 		MSG_OK or MSG_NO -> host
 
 		if MSG_NO {
@@ -41,10 +37,7 @@ const (
 	MSG_OK
 	MSG_NO
 	MSG_TYPE
-	MSG_BEGIN
 	MSG_DATA
-	MSG_END
-	MSG_CHECK
 )
 
 type Message struct {
@@ -55,4 +48,8 @@ type Message struct {
 type Dispatchable interface {
 	SendMessage(msg *Message) bool
 	Ping() bool
+}
+
+type Processable interface {
+	ProcessMessage(msg *Message)
 }

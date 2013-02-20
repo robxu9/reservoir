@@ -1,6 +1,7 @@
 package reservoir
 
 type Job struct {
-	Id string
+	Id     string
 	Script string
+	Worker *Worker
 }

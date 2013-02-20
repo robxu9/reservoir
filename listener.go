@@ -3,16 +3,22 @@ package reservoir
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
 )
 
 var n1 byte = 10
+var messageProcessors map[string]Processable = make(map[string]Processable)
 var run bool
 
 func processMessage(msg string) {
-
+	msgobj := new(Message)
+	err := json.Unmarshal(msg, msgobj)
+	if err != nil {
+		Errorf("Could not process message: %s\n", err)
+	}
 }
 
 func handle(conn *net.TCPConn) {
@@ -32,7 +38,7 @@ func handle(conn *net.TCPConn) {
 			go processMessage(jsonMSG.String())
 			return
 		} else {
-			fmt.Printf("Error %s from %s.\n", err.Error(), conn.RemoteAddr().String())
+			Errorf("Error %s from %s.\n", err.Error(), conn.RemoteAddr().String())
 			conn.Close()
 			return
 		}
@@ -48,10 +54,10 @@ func Listener_Stop() {
 }
 
 func Listener_Run() {
-	l, err := net.ListenTCP("tcp4", &net.TCPAddr{net.IPv4zero, 24098})
+	l, err := net.ListenTCP("tcp", net.ResolveTCPAddr("tcp", ":24096"))
 
 	if err != nil {
-		panic(err)
+		Panicf(err)
 	}
 
 	run = true
@@ -59,7 +65,7 @@ func Listener_Run() {
 	for {
 		conn, err := l.AcceptTCP()
 		if err != nil {
-			fmt.Printf("Couldn't accept connection: %s\n", err.Error())
+			Errorf("Couldn't accept connection: %s\n", err.Error())
 			continue
 		}
 		go handle(conn)
