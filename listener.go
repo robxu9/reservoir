@@ -10,7 +10,7 @@ import (
 )
 
 var n1 byte = 10
-var messageProcessors map[string]Processable = make(map[string]Processable)
+var messageProcessors map[byte]Processable = make(map[byte]Processable)
 var run bool
 
 func processMessage(msg string) {
@@ -18,7 +18,14 @@ func processMessage(msg string) {
 	err := json.Unmarshal(msg, msgobj)
 	if err != nil {
 		Errorf("Could not process message: %s\n", err)
+		return
 	}
+	processor, ok := messageProcessors[msgobj.msgtype]
+	if !ok {
+		Errorf("Can't parse message of type %d, %s\n", msgobj.msgtype, msgobj.message)
+		return
+	}
+	processor.ProcessMessage(msgob)
 }
 
 func handle(conn *net.TCPConn) {
