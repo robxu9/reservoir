@@ -1,14 +1,14 @@
 package reservoir
 
 /*
-	Status shows the current status of Reservoir's scheduler:
+	SchedulerStatus shows the current status of Reservoir's scheduler:
 
 	0 : Stopped
 	1 : Waiting for available workers
 	2 : Waiting for jobs
 	3 : Dispatching job
 */
-var Status uint8
+var SchedulerStatus uint8
 
 var runScheduler bool
 
@@ -18,7 +18,7 @@ var workerChannel chan *Worker
 func init() {
 	jobChannel = make(chan *Job, 100)
 	workerChannel = make(chan *Worker, 100)
-	Status = 0
+	SchedulerStatus = 0
 	runScheduler = false
 }
 
@@ -37,11 +37,11 @@ func Scheduler_Stop() {
 func Scheduler_Run() {
 	runScheduler = true
 	for runScheduler {
-		Status = 1
+		SchedulerStatus = 1
 		worker := <-workerChannel
-		Status = 2
+		SchedulerStatus = 2
 		job := <-jobChannel
-		Status = 3
+		SchedulerStatus = 3
 		go worker.DispatchJob(job)
 	}
 }
