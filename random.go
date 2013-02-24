@@ -1,8 +1,7 @@
 package reservoir
 
 import (
-	"fmt"
-	"rand"
+	"math/rand"
 	"time"
 )
 
@@ -19,7 +18,7 @@ func NewAlphaNumericRS() *RS {
 func NewRS(pool string) *RS {
 	return &RS{
 		pool,
-		rand.New(rand.NewSource(time.Nanoseconds())),
+		rand.New(rand.NewSource(time.Now().UnixNano())),
 		make(map[string]int),
 	}
 }

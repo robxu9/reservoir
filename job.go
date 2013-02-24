@@ -24,7 +24,7 @@ type reservoirJob struct {
 	once   sync.Once
 }
 
-func NewReservoirJob(script string) *Job {
+func NewReservoirJob(script string) Job {
 	return &reservoirJob{
 		"",
 		script,
@@ -35,7 +35,7 @@ func NewReservoirJob(script string) *Job {
 
 func (r *reservoirJob) init() {
 	r.once.Do(func() {
-		r.Id = random.NewRandomString(15)
+		r.id = random.NewRandomString(15)
 	})
 }
 

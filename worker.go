@@ -4,11 +4,23 @@ import (
 	"net"
 )
 
+var Workers map[string]map[uint64]*Worker = make(map[string]map[uint64]*Worker)
+
+func AddWorker(worker *Worker) {
+	Workers[worker.WorkerName][worker.WorkerSub] = worker
+}
+
+func RmWorker(worker *Worker) {
+	delete(Workers[worker.WorkerName], worker.WorkerSub)
+}
+
 type Worker struct {
-	workername string
-	workersub  uint64
-	host       string
-	connection *net.TCPConn
+	WorkerName string
+	WorkerSub  uint64
+	Host       string
+	Connection *net.TCPConn
+	ExitTask   string
+	Closed     bool
 }
 
 func (w *Worker) DispatchJob(job *Job) {
@@ -25,11 +37,30 @@ func (w *Worker) Ping() bool {
 	return true
 }
 
+func (w *Worker) Dial() error {
+	tcpAddr, err := net.ResolveTCPAddr("tcp", w.Host)
+	if err != nil {
+		return err
+	}
+	tcpConn, err := net.DialTCP("tcp", nil, tcpAddr)
+	if err != nil {
+		return err
+	}
+	w.Connection = tcpConn
+	w.ExitTask = AddExitTask(func() {
+		w.Connection.Close()
+	})
+	w.Closed = false
+	return nil
+}
+
 func (w *Worker) Shutdown() {
 	// Finish remaining jobs and shutdown
-	w.connection.Close()
+	w.Connection.Close()
+	RmExitTask(w.ExitTask)
+	w.Closed = true
 }
 
 func (w *Worker) IsShutdown() bool {
-	return false
+	return w.Closed
 }
