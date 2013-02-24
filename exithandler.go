@@ -40,11 +40,9 @@ func signalCatcher() {
 	signal.Notify(ch, syscall.SIGHUP)
 	signal.Notify(ch, syscall.SIGINT)
 	for signal := range ch {
-		if signal == syscall.SIGHUP || signal == syscall.SIGINT {
-			log.Printf("received SIGHUP or SIGINT exiting...")
-			exitHandler.OnExit()
-			os.Exit(0)
-		}
+		log.Printf("received %s, exiting.", signal.String())
+		exitHandler.OnExit()
+		os.Exit(0)
 	}
 }
 
