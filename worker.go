@@ -4,14 +4,17 @@ import (
 	"net"
 )
 
-var Workers map[string]map[uint64]*Worker = make(map[string]map[uint64]*Worker)
+var WorkerHosts map[string]map[uint64]*Worker = make(map[string]map[uint64]*Worker)
 
 func AddWorker(worker *Worker) {
-	Workers[worker.WorkerName][worker.WorkerSub] = worker
+	if WorkerHosts[worker.WorkerName] == nil {
+		WorkerHosts[worker.WorkerName] = make(map[uint64]*Worker)
+	}
+	WorkerHosts[worker.WorkerName][worker.WorkerSub] = worker
 }
 
 func RmWorker(worker *Worker) {
-	delete(Workers[worker.WorkerName], worker.WorkerSub)
+	delete(WorkerHosts[worker.WorkerName], worker.WorkerSub)
 }
 
 type Worker struct {
