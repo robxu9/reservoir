@@ -21,12 +21,12 @@ func init() {
 			panic(err)
 		}
 	}
-	defer func() {
+	AddExitTask(func() {
 		err := file.Close()
 		if err != nil {
 			panic(err)
 		}
-	}()
+	})
 
 	fileBuffer := bufio.NewWriter(file)
 	multiWriter := io.MultiWriter(os.Stdout, fileBuffer)

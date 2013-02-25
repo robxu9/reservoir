@@ -29,6 +29,10 @@ type DefaultHandler struct {
 }
 
 func (self *DefaultHandler) OnExit() {
+	for key, value := range exitTasks {
+		log.Printf("Running Exit Task %s...", key)
+		value()
+	}
 }
 
 func init() {
@@ -39,11 +43,10 @@ func signalCatcher() {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGHUP)
 	signal.Notify(ch, syscall.SIGINT)
-	for signal := range ch {
-		log.Printf("received %s, exiting.", signal.String())
-		exitHandler.OnExit()
-		os.Exit(0)
-	}
+	signal := <-ch
+	log.Printf("received \"%s\", exiting.", signal.String())
+	exitHandler.OnExit()
+	os.Exit(0)
 }
 
 func SetExitHandler(handler ExitHandler) {

@@ -1,5 +1,9 @@
 package reservoir
 
+import (
+	"time"
+)
+
 /*
 	SchedulerStatus shows the current status of Reservoir's scheduler:
 
@@ -88,5 +92,6 @@ func scheduler_terminate(t chan bool) {
 			t <- true
 			return
 		}
+		time.Sleep(100 * time.Millisecond)
 	}
 }
