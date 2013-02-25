@@ -3,17 +3,18 @@ Reservoir API structure
 
 Currently consists of:
 
-==Workers==
+**Workers**
 
 * Workers execute Jobs. Supported includes Linux 2.6/3, Darwin with MacPorts, and Cygwin.
 * These take the jobs and basically run the scripts attached to them.
 
-==Jobs==
+**Jobs**
 
 * Define the tasks for workers to do. Jobs are pretty much javascript files.
 * Jobs can queue other jobs for the scheduler.
+* (javascript parser: https://github.com/robertkrimen/otto)
 
-==Scheduler==
+**Scheduler**
 
 * The job scheduler schedules jobs that are queued, either from an API or other jobs.
 * This is basically a channel that sends out jobs to available workers.
