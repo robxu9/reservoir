@@ -21,6 +21,12 @@ Currently consists of:
 
 (so, it would be like <-workerChan, followed by <-jobChan, and do it all over again).
 
+**MultiThreading**
+
+* This is all multithreaded within the application (well, goroutine'd.)
+* Most likely going to have to depend on native SQLite thread support before it gets too complicated.
+* ORM for easy mapping: https://github.com/astaxie/beedb
+
 
 ==FUTURE==
 

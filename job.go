@@ -9,6 +9,17 @@ const (
 )
 
 var random *RS = NewAlphaNumericRS()
+var randCall chan bool = make(chan bool, 10)
+var randGet chan string = make(chan string, 10)
+
+func init() {
+	go func() {
+		for {
+			<-randCall
+			randGet <- random.NewRandomString(15)
+		}
+	}()
+}
 
 type Job interface {
 	GetId() string
@@ -35,7 +46,8 @@ func NewReservoirJob(script string) Job {
 
 func (r *reservoirJob) init() {
 	r.once.Do(func() {
-		r.id = random.NewRandomString(15)
+		randCall <- true
+		r.id = <-randGet
 	})
 }
 
