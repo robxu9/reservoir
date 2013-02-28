@@ -1,9 +1,5 @@
 package reservoir
 
-import (
-	"time"
-)
-
 /*
 	SchedulerStatus shows the current status of Reservoir's scheduler:
 
@@ -23,7 +19,7 @@ const (
 
 var SchedulerStatus uint8
 
-var runScheduler bool
+var shutdownChannel chan bool
 var exittask string
 
 var JobsChannel chan *ReservoirJob // Pending Jobs
@@ -41,7 +37,7 @@ func init() {
 	WorkerChannel = make(chan *Worker, 1000)
 	readyChannel = make(chan *ready)
 	SchedulerStatus = SCHEDULER_STOPPED
-	runScheduler = false
+	shutdownChannel = make(chan bool)
 }
 
 func Scheduler_QueueJob(j *ReservoirJob) {
@@ -53,12 +49,11 @@ func Scheduler_QueueWorker(w *Worker) {
 }
 
 func Scheduler_Stop() {
-	runScheduler = false
+	shutdownChannel <- true
 	RmExitTask(exittask)
 }
 
 func Scheduler_Run() {
-	runScheduler = true
 	exitTaskOK := AddDefinedExitTask("Scheduler", Scheduler_Stop)
 	if exitTaskOK {
 		exittask = "Scheduler"
@@ -83,20 +78,17 @@ func Scheduler_Run() {
 }
 
 func scheduler_dispatcher() {
-	SchedulerStatus = SCHEDULER_WAITWORKER
-	worker := <-WorkerChannel
-	SchedulerStatus = SCHEDULER_WAITJOB
-	job := <-JobsChannel
-	SchedulerStatus = SCHEDULER_DISPATCHJOB
-	readyChannel <- &ready{job, worker}
+	for {
+		SchedulerStatus = SCHEDULER_WAITWORKER
+		worker := <-WorkerChannel
+		SchedulerStatus = SCHEDULER_WAITJOB
+		job := <-JobsChannel
+		SchedulerStatus = SCHEDULER_DISPATCHJOB
+		readyChannel <- &ready{job, worker}
+	}
 }
 
 func scheduler_terminate(t chan bool) {
-	for {
-		if !runScheduler {
-			t <- true
-			return
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
+	<-shutdownChannel
+	t <- true
 }
