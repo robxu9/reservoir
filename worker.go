@@ -26,7 +26,7 @@ type Worker struct {
 	Closed     bool
 }
 
-func (w *Worker) DispatchJob(job *Job) {
+func (w *Worker) DispatchJob(job *ReservoirJob) {
 
 }
 

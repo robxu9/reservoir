@@ -21,7 +21,7 @@ func init() {
 			panic(err)
 		}
 	}
-	AddExitTask(func() {
+	AddDefinedExitTask("Logger", func() {
 		err := file.Close()
 		if err != nil {
 			panic(err)

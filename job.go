@@ -1,69 +1,95 @@
 package reservoir
 
 import (
-	"sync"
+	"log"
+	"time"
 )
 
 const (
-	JOBID_LENGTH = 15
+	JOB_PENDING = iota
+	JOB_DISPATCHING
+	JOB_RUNNING
+	JOB_FINISHED
 )
 
-var random *RS = NewAlphaNumericRS()
-var randCall chan bool = make(chan bool, 10)
-var randGet chan string = make(chan string, 10)
-
-func init() {
-	go func() {
-		for {
-			<-randCall
-			randGet <- random.NewRandomString(15)
-		}
-	}()
+type ReservoirJob struct {
+	JobId        uint64 `PK`
+	JobScript    string
+	JobStatus    int
+	JobLog       string
+	LastModified string
 }
 
-type Job interface {
-	GetId() string
-	GetScript() string
-	GetWorker() *Worker
-	SetWorker(w *Worker)
-}
-
-type reservoirJob struct {
-	id     string
-	script string
-	worker *Worker
-	once   sync.Once
-}
-
-func NewReservoirJob(script string) Job {
-	return &reservoirJob{
+func Job_New(JobScript string) *ReservoirJob {
+	job := &ReservoirJob{
+		0,
+		JobScript,
+		JOB_PENDING,
 		"",
-		script,
-		nil,
-		sync.Once{},
+		time.Now().Format("2006-01-02 15:04:05"),
 	}
+
+	if Job_Update(job) {
+		return job
+	}
+	return nil
 }
 
-func (r *reservoirJob) init() {
-	r.once.Do(func() {
-		randCall <- true
-		r.id = <-randGet
-	})
+func Job_Get(id uint64) *ReservoirJob {
+	model, err := RetrieveDB()
+	if err != nil {
+		log.Printf("Failed to retrieve DB model for job: %s", err)
+		return nil
+	}
+
+	defer model.Db.Close()
+
+	var job ReservoirJob
+	err = model.Where("jobid=?", id).Find(&job)
+	if err != nil {
+		log.Printf("Failed to find job for ID %d: %s", id, err)
+		return nil
+	}
+
+	return &job
 }
 
-func (r *reservoirJob) GetId() string {
-	r.init()
-	return r.id
+func Job_Update(job *ReservoirJob) bool {
+	model, err := RetrieveDB()
+	if err != nil {
+		log.Printf("Failed to retrieve DB model for job: %s", err)
+		return false
+	}
+
+	defer model.Db.Close()
+
+	job.LastModified = time.Now().Format("2006-01-02 15:04:05")
+
+	err = model.Save(job)
+	if err != nil {
+		log.Printf("Failed to update job to DB model: %s", err)
+		return false
+	}
+
+	return true
 }
 
-func (r *reservoirJob) GetScript() string {
-	return r.script
+func (r *ReservoirJob) GetId() uint64 {
+	return r.JobId
 }
 
-func (r *reservoirJob) GetWorker() *Worker {
-	return r.worker
+func (r *ReservoirJob) GetScript() string {
+	return r.JobScript
 }
 
-func (r *reservoirJob) SetWorker(w *Worker) {
-	r.worker = w
+func (r *ReservoirJob) GetStatus() int {
+	return r.JobStatus
+}
+
+func (r *ReservoirJob) GetLog() string {
+	return r.JobLog
+}
+
+func (r *ReservoirJob) GetLastModification() string {
+	return r.LastModified
 }

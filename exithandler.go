@@ -12,9 +12,21 @@ var exitTasks map[string]func() = make(map[string]func())
 var exitIdRS *RS = NewAlphaNumericRS()
 
 func AddExitTask(task func()) string {
-	idstring := exitIdRS.NewRandomString(8)
-	exitTasks[idstring] = task
-	return idstring
+	for {
+		idstring := exitIdRS.NewRandomString(8)
+		if AddDefinedExitTask(idstring, task) {
+			return idstring
+		}
+	}
+	return ""
+}
+
+func AddDefinedExitTask(name string, task func()) bool {
+	_, ok := exitTasks[name]
+	if !ok {
+		exitTasks[name] = task
+	}
+	return !ok
 }
 
 func RmExitTask(id string) {
