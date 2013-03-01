@@ -10,6 +10,7 @@ import (
 var exitHandler ExitHandler = &DefaultHandler{}
 var exitTasks map[string]func() = make(map[string]func())
 var exitIdRS *RS = NewAlphaNumericRS()
+var Reservoir_Shutdown chan bool = make(chan bool)
 
 func AddExitTask(task func()) string {
 	for {
@@ -56,7 +57,13 @@ func signalCatcher() {
 	signal.Notify(ch, syscall.SIGHUP)
 	signal.Notify(ch, syscall.SIGINT)
 	signal.Notify(ch, syscall.SIGTERM)
-	signal := <-ch
+	var type string
+	select {
+		case signal := <-ch:
+			type = signal.String()
+		case <-Reservoir_Shutdown:
+			type = "normal call to shutdown"
+	}
 	log.Printf("received \"%s\", exiting.", signal.String())
 	exitHandler.OnExit()
 	os.Exit(0)
