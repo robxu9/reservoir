@@ -20,6 +20,7 @@ type WorkerConnection struct {
 var Workers workerMap
 var workerExitChan chan bool
 var workerexittask string
+var workerwaitchan chan bool
 
 type workerMap struct {
 	lock     *sync.RWMutex
@@ -67,9 +68,12 @@ func init() {
 		&sync.RWMutex{},
 		make(map[WorkerID]*WorkerConnection),
 	}
+	
+	workerwaitchan = make(chan bool)
 
 	term := func() {
 		workerExitChan <- true
+		<-workerwaitchan
 	}
 
 	workerExitChan = make(chan bool)
@@ -84,8 +88,6 @@ func init() {
 		// TODO
 		// disconnect from all workers, pull jobs that haven't finished
 		// and wait until completed.
-		// FIXME reservoir has a chance of exiting before this is complete,
-		// implement waiting mechanism
 	}()
 }
 
