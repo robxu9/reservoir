@@ -55,6 +55,7 @@ func signalCatcher() {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGHUP)
 	signal.Notify(ch, syscall.SIGINT)
+	signal.Notify(ch, syscall.SIGTERM)
 	signal := <-ch
 	log.Printf("received \"%s\", exiting.", signal.String())
 	exitHandler.OnExit()
