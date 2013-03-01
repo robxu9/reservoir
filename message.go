@@ -42,6 +42,7 @@ const (
 
 type Message struct {
 	msgtype byte   `json:"type"`
+	msgdest	string `json:"dest"`
 	message string `json:"message"`
 }
 
