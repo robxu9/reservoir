@@ -13,8 +13,8 @@ type WorkerID struct {
 type WorkerConnection struct {
 	Host       string
 	Connection *net.TCPConn
-	ExitTask   string
-	Closed     bool
+	exittask   string
+	closed     bool
 }
 
 var Workers workerMap
@@ -91,30 +91,7 @@ func init() {
 	}()
 }
 
-type Worker struct {
-	WorkerName string
-	WorkerSub  uint64
-	Host       string
-	Connection *net.TCPConn
-	ExitTask   string
-	Closed     bool
-}
-
-func (w *Worker) DispatchJob(job *ReservoirJob) {
-
-}
-
-// Send a message to the worker
-func (w *Worker) SendMessage(msg *Message) bool {
-
-	return false
-}
-
-func (w *Worker) Ping() bool {
-	return true
-}
-
-func (w *Worker) Dial() error {
+func (w *WorkerConnection) Dial() error {
 	tcpAddr, err := net.ResolveTCPAddr("tcp", w.Host)
 	if err != nil {
 		return err
@@ -124,20 +101,21 @@ func (w *Worker) Dial() error {
 		return err
 	}
 	w.Connection = tcpConn
-	w.ExitTask = AddExitTask(func() {
+	w.exittask = AddExitTask(func() {
 		w.Connection.Close()
 	})
-	w.Closed = false
+	w.closed = false
 	return nil
 }
 
-func (w *Worker) Shutdown() {
+func (w *WorkerConnection) Close() {
 	// Finish remaining jobs and shutdown
+	// Also alert
 	w.Connection.Close()
-	RmExitTask(w.ExitTask)
-	w.Closed = true
+	RmExitTask(w.exittask)
+	w.closed = true
 }
 
-func (w *Worker) IsShutdown() bool {
-	return w.Closed
+func (w *WorkerConnection) IsClosed() bool {
+	return w.closed
 }
