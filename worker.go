@@ -22,44 +22,49 @@ var workerExitChan chan bool
 var workerexittask string
 
 type workerMap struct {
-	lock     *sync.Mutex
-	requests chan workerMapReq
+	lock     *sync.RWMutex
 	workMap  map[WorkerID]*WorkerConnection
 }
 
 func (w *workerMap) Keys() []WorkerID {
 	slice := make([]WorkerID, 0)
-	w.lock.Lock()
+	w.lock.RLock()
 	for key := range w.workMap {
 		slice = append(slice, key)
 	}
-	w.lock.Unlock()
+	w.lock.RUnlock()
 	return slice
 }
 
+func (w *workerMap) Has(key WorkerID) bool {
+	w.lock.RLock()
+	_, ok := w.workMap[key]
+	w.lock.RUnlock()
+	return ok
+}
+
 func (w *workerMap) Get(key WorkerID) *WorkerConnection {
-	retchan := make(chan *WorkerConnection)
-	Workers.requests <- workerMapReq{true, key, nil, retchan}
-	return <-retchan
+	w.lock.RLock()
+	val := w.workMap[key]
+	w.lock.RUnlock()
+	return val
 }
 
 func (w *workerMap) Set(key WorkerID, value *WorkerConnection) *WorkerConnection {
-	retchan := make(chan *WorkerConnection)
-	Workers.requests <- workerMapReq{false, key, value, retchan}
-	return <-retchan
-}
-
-type workerMapReq struct {
-	get     bool
-	key     WorkerID
-	value   *WorkerConnection
-	retchan chan *WorkerConnection
+	w.lock.Lock()
+	oldVal := w.workMap[key]
+	if value == nil {
+		delete(w.workMap, key)
+	} else {
+		w.workMap[key] = value
+	}
+	w.lock.Unlock()
+	return oldVal
 }
 
 func init() {
 	Workers = workerMap{
-		&sync.Mutex{},
-		make(chan workerMapReq),
+		&sync.RWMutex{},
 		make(map[WorkerID]*WorkerConnection),
 	}
 
@@ -73,29 +78,15 @@ func init() {
 	} else {
 		workerexittask = AddExitTask(term)
 	}
-
+	
 	go func() {
-		for {
-			select {
-			case req := <-Workers.requests:
-				go workers_modify(req)
-			case <-workerExitChan:
-				return
-			}
-		}
+		<-workerExitChan
+		// TODO
+		// disconnect from all workers, pull jobs that haven't finished
+		// and wait until completed.
+		// FIXME reservoir has a chance of exiting before this is complete,
+		// implement waiting mechanism
 	}()
-}
-
-func workers_modify(req workerMapReq) {
-	Workers.lock.Lock()
-	oldval := Workers.workMap[req.key]
-	if req.value == nil && !req.get {
-		delete(Workers.workMap, req.key)
-	} else if req.value != nil {
-		Workers.workMap[req.key] = req.value
-	}
-	Workers.lock.Unlock()
-	req.retchan <- oldval
 }
 
 type Worker struct {
