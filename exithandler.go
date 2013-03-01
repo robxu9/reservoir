@@ -57,14 +57,14 @@ func signalCatcher() {
 	signal.Notify(ch, syscall.SIGHUP)
 	signal.Notify(ch, syscall.SIGINT)
 	signal.Notify(ch, syscall.SIGTERM)
-	var type string
+	var msg string
 	select {
 		case signal := <-ch:
-			type = signal.String()
+			msg = signal.String()
 		case <-Reservoir_Shutdown:
-			type = "normal call to shutdown"
+			msg = "normal call to shutdown"
 	}
-	log.Printf("received \"%s\", exiting.", signal.String())
+	log.Printf("received \"%s\", exiting.", msg)
 	exitHandler.OnExit()
 	os.Exit(0)
 }
