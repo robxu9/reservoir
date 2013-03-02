@@ -23,18 +23,18 @@ var shutdownChannel chan bool
 var exittask string
 
 var JobsChannel chan *ReservoirJob // Pending Jobs
-var WorkerChannel chan *Worker     // Idle Workers (minus 1, as it's pulled by job)
+var WorkerChannel chan WorkerID    // Idle Workers (minus 1, as it's pulled by job)
 
 type ready struct {
 	job    *ReservoirJob
-	worker *Worker
+	worker WorkerID
 }
 
 var readyChannel chan *ready
 
 func init() {
 	JobsChannel = make(chan *ReservoirJob, 10000)
-	WorkerChannel = make(chan *Worker, 1000)
+	WorkerChannel = make(chan WorkerID, 1000)
 	readyChannel = make(chan *ready)
 	SchedulerStatus = SCHEDULER_STOPPED
 	shutdownChannel = make(chan bool)
@@ -44,7 +44,7 @@ func Scheduler_QueueJob(j *ReservoirJob) {
 	JobsChannel <- j
 }
 
-func Scheduler_QueueWorker(w *Worker) {
+func Scheduler_QueueWorker(w WorkerID) {
 	WorkerChannel <- w
 }
 
@@ -81,14 +81,24 @@ func scheduler_dispatcher() {
 	for {
 		SchedulerStatus = SCHEDULER_WAITWORKER
 		worker := <-WorkerChannel
+		if SchedulerStatus == SCHEDULER_STOPPED {
+			return
+		}
 		SchedulerStatus = SCHEDULER_WAITJOB
 		job := <-JobsChannel
+		if SchedulerStatus == SCHEDULER_STOPPED {
+			return
+		}
 		SchedulerStatus = SCHEDULER_DISPATCHJOB
 		readyChannel <- &ready{job, worker}
+		if SchedulerStatus == SCHEDULER_STOPPED {
+			return
+		}
 	}
 }
 
 func scheduler_terminate(t chan bool) {
 	<-shutdownChannel
 	t <- true
+	SchedulerStatus = SCHEDULER_STOPPED
 }
