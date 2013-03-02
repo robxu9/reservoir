@@ -69,7 +69,7 @@ func Scheduler_Run() {
 		for {
 			select {
 			case rjob := <-readyChannel:
-				go rjob.worker.DispatchJob(rjob.job)
+				go Workers.Get(rjob.worker).QueueJob(rjob.job)
 			case <-t:
 				return
 			}

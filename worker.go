@@ -23,8 +23,8 @@ var workerexittask string
 var workerwaitchan chan bool
 
 type workerMap struct {
-	lock     *sync.RWMutex
-	workMap  map[WorkerID]*WorkerConnection
+	lock    *sync.RWMutex
+	workMap map[WorkerID]*WorkerConnection
 }
 
 func (w *workerMap) Keys() []WorkerID {
@@ -68,7 +68,7 @@ func init() {
 		&sync.RWMutex{},
 		make(map[WorkerID]*WorkerConnection),
 	}
-	
+
 	workerwaitchan = make(chan bool)
 
 	term := func() {
@@ -82,13 +82,27 @@ func init() {
 	} else {
 		workerexittask = AddExitTask(term)
 	}
-	
+
 	go func() {
 		<-workerExitChan
 		// TODO
 		// disconnect from all workers, pull jobs that haven't finished
 		// and wait until completed.
 	}()
+}
+
+func (w *WorkerConnection) SendMessage(msg *Message) bool {
+	// TODO
+	return true
+}
+
+func (w *WorkerConnection) Ping() bool {
+	// TODO
+	return true
+}
+
+func (w *WorkerConnection) QueueJob(job *Job) {
+
 }
 
 func (w *WorkerConnection) Dial() error {
