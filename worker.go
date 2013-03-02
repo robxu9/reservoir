@@ -101,7 +101,7 @@ func (w *WorkerConnection) Ping() bool {
 	return true
 }
 
-func (w *WorkerConnection) QueueJob(job *Job) {
+func (w *WorkerConnection) QueueJob(job *ReservoirJob) {
 
 }
 
