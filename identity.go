@@ -1,6 +1,6 @@
 package main
 
-type Ident interface {
+type Identity interface {
 	GetName() string
 	GetProjects() []*Project
 }
