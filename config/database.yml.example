@@ -1,0 +1,15 @@
+development:
+    proto: tcp
+    addr: localhost:3306
+    options: ""
+    user: user
+    pass: pass
+    dbname: database
+
+production:
+    proto: tcp
+    addr: localhost:3306
+    options: ""
+    user: user
+    pass: pass
+    dbname: database

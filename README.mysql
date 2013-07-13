@@ -1,0 +1,9 @@
+README.db
+
+We use bitbucket.org/liamstask/goose for MYSQL management.
+
+To migrate, run from the project directory:
+	go get -u bitbucket.org/liamstask/goose
+	goose up
+
+You may use goose -h for more information.

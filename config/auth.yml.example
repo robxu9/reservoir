@@ -1,0 +1,9 @@
+development:
+    github_auth: false
+    client_id: xxxxx
+    client_secret: xxxxx
+
+production:
+    github_auth: false
+    client_id: xxxxx
+    client_secret: xxxxx

@@ -1,0 +1,9 @@
+development:
+    listenon: ":9000"
+    gomaxprocs: 4
+    fcgi: false
+
+production:
+    listenon: ":9000"
+    gomaxprocs: 4
+    fcgi: false

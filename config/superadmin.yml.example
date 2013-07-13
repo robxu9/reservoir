@@ -1,0 +1,7 @@
+development:
+    - admin
+    - another_admin
+
+production:
+    - production_admin
+    - another_admin
