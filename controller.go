@@ -19,7 +19,7 @@ func Controller_Project() {
 	})
 
 	// Map main projects view
-	goweb.Map("/project", func(c context.Context) error {
+	goweb.Map(gowebhttp.MethodGet, "/projects", func(c context.Context) error {
 		list, err := Model_GetProjectList()
 
 		if err != nil {
@@ -39,7 +39,28 @@ func Controller_Project() {
 		return goweb.API.RespondWithData(c, jsonresp)
 	})
 
-	goweb.Map("/project/{name}", func(c context.Context) error {
+	goweb.Map(gowebhttp.MethodGet, "/projects/user", func(c context.Context) error {
+		list, err := Model_GetProjectList()
+
+		if err != nil {
+			log.Printf("error in controller: %s", err.Error())
+			debug.PrintStack()
+			return goweb.API.RespondWithError(c, http.StatusInternalServerError, err.Error())
+		}
+
+		jsonresp, err := json.MarshalIndent(list, "", "\t")
+
+		if err != nil {
+			log.Printf("error in controller: %s", err.Error())
+			debug.PrintStack()
+			return goweb.API.RespondWithError(c, http.StatusInternalServerError, err.Error())
+		}
+
+		return goweb.API.RespondWithData(c, jsonresp)
+	})
+
+
+	goweb.Map(gowebhttp.MethodGet, "/project/{name}", func(c context.Context) error {
 		proj, err := Model_GetProject(c.PathParam("name"))
 
 		if err != nil {

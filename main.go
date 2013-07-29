@@ -19,7 +19,9 @@ const (
 
 func main() {
 
+	log.SetFlags(0)
 	log.Printf("Reservoir %s.%s.%s | A GOod Build Server\n", MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION)
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	log.Print("")
 
 	var serverConfig map[string]map[string]interface{}
@@ -37,7 +39,7 @@ func main() {
 
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		panic(err)
+		log.Panicf("Error starting listener: %s", err)
 	}
 
 	handler := &AuthHandler{goweb.DefaultHttpHandler()}
@@ -51,7 +53,7 @@ func main() {
 	}
 
 	if err != nil {
-		panic(err)
+		log.Panicf("Error starting server mode: %s", err)
 	}
 
 	log.Print("Starting signal handler...")
